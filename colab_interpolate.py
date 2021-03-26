@@ -10,6 +10,8 @@ from imageio import imread, imsave
 from AverageMeter import  *
 import shutil
 import datetime
+import cv2
+
 torch.backends.cudnn.benchmark = True
 
 model = networks.__dict__[args.netName](
@@ -66,11 +68,19 @@ while input_frame < final_frame - 1:
 
     start_time = time.time()
 
-    filename_frame_1 = os.path.join(frames_dir, f'{input_frame:0>5d}.png')
-    filename_frame_2 = os.path.join(frames_dir, f'{input_frame+1:0>5d}.png')
+    filename_frame_1 = os.path.join(frames_dir, f'{input_frame:0>5d}.bin')
+    filename_frame_2 = os.path.join(frames_dir, f'{input_frame+1:0>5d}.bin')
 
-    X0 = torch.from_numpy(np.transpose(imread(filename_frame_1), (2,0,1)).astype("float32") / 255.0).type(args.dtype)
-    X1 = torch.from_numpy(np.transpose(imread(filename_frame_2), (2,0,1)).astype("float32") / 255.0).type(args.dtype)
+    #TODO: แปลง grayscale เป็น RGB ด้วย cv2
+
+    image1 = cv2.cvtColor(np.fromfile(filename_frame_1, dtype=np.float32).reshape(279, 319), cv2.COLOR_GRAY2RGB)
+    image2 = cv2.cvtColor(np.fromfile(filename_frame_2, dtype=np.float32).reshape(279, 319), cv2.COLOR_GRAY2RGB)
+
+    X0 = torch.from_numpy(np.transpose(image1, (2, 0, 1)).astype("float32") / 255.0).type(args.dtype)
+    X1 = torch.from_numpy(np.transpose(image2, (2, 0, 1)).astype("float32") / 255.0).type(args.dtype)
+
+    # X0 = torch.from_numpy(np.fromfile(filename_frame_1, dtype=np.float32).reshape(1,279,319) / 255.0).type(args.dtype)
+    # X1 = torch.from_numpy(np.fromfile(filename_frame_2, dtype=np.float32).reshape(1,279,319) / 255.0).type(args.dtype)
 
     assert (X0.size(1) == X1.size(1))
     assert (X0.size(2) == X1.size(2))
@@ -141,11 +151,17 @@ while input_frame < final_frame - 1:
     X1 = np.transpose(255.0 * X1.clip(0,1.0)[0, :, intPaddingTop:intPaddingTop+intHeight, intPaddingLeft: intPaddingLeft+intWidth], (1, 2, 0))
 
     interpolated_frame_number = 0
-    shutil.copy(filename_frame_1, os.path.join(output_dir, f"{input_frame:0>5d}{interpolated_frame_number:0>3d}.png"))
+    shutil.copy(filename_frame_1, os.path.join(output_dir, f"{input_frame:0>5d}{interpolated_frame_number:0>3d}.bin"))
     for item, time_offset in zip(y_, time_offsets):
         interpolated_frame_number += 1
-        output_frame_file_path = os.path.join(output_dir, f"{input_frame:0>5d}{interpolated_frame_number:0>3d}.png")
-        imsave(output_frame_file_path, np.round(item).astype(numpy.uint8))
+        output_frame_file_path = os.path.join(output_dir, f"{input_frame:0>5d}{interpolated_frame_number:0>3d}.bin")
+        # imsave(output_frame_file_path, np.round(item).astype(numpy.uint8))
+        if item.shape[2] == 3:
+            item_1ch = np.copy(item.sum(axis=2)/3)
+            item_1ch.astype('float32').tofile(output_frame_file_path)
+        else:
+            item.astype('float32').tofile(output_frame_file_path)
+
 
     end_time = time.time()
     loop_timer.update(end_time - start_time)
@@ -156,7 +172,7 @@ while input_frame < final_frame - 1:
     print(f"****** Processed frame {input_frame} | Time per frame (avg): {loop_timer.avg:2.2f}s | Time left: {estimated_time_left} ******************" )
 
 # Copying last frame
-last_frame_filename = os.path.join(frames_dir, str(str(final_frame).zfill(5))+'.png')
-shutil.copy(last_frame_filename, os.path.join(output_dir, f"{final_frame:0>5d}{0:0>3d}.png"))
+last_frame_filename = os.path.join(frames_dir, str(str(final_frame).zfill(5))+'.bin')
+shutil.copy(last_frame_filename, os.path.join(output_dir, f"{final_frame:0>5d}{0:0>3d}.bin"))
 
 print("Finished processing images.")
