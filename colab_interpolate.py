@@ -3,14 +3,15 @@ import os
 from torch.autograd import Variable
 import torch
 import numpy as np
-import numpy
 import networks
 from my_args import args
 from imageio import imread, imsave
-from AverageMeter import  *
+from AverageMeter import *
 import shutil
 import datetime
 import cv2
+import pandas as pd
+
 
 torch.backends.cudnn.benchmark = True
 
@@ -60,18 +61,25 @@ final_frame = args.end_frame
 
 torch.set_grad_enabled(False)
 
+dlist = pd.date_range('2018-06-01 00:00', '2018-06-30 23:00', freq='1H')
+dlist_iteration = 0
+dlist_iteration_interpolate = 0
+
 # we want to have input_frame between (start_frame-1) and (end_frame-2)
 # this is because at each step we read (frame) and (frame+1)
 # so the last iteration will actuall be (end_frame-1) and (end_frame)
+
+
 while input_frame < final_frame - 1:
     input_frame += 1
 
+    # Example of file name : 00685_gsmap_nrt_japansub.20180629.1200.bin
+
     start_time = time.time()
+    filename_frame_1 = os.path.join(frames_dir, f'{input_frame:0>5d}_gsmap_nrt_japansub.{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H%M}.bin')
+    filename_frame_2 = os.path.join(frames_dir, f'{input_frame+1:0>5d}_gsmap_nrt_japansub.{dlist[dlist_iteration+1]:%Y%m%d}.{dlist[dlist_iteration+1]:%H%M}.bin')
 
-    filename_frame_1 = os.path.join(frames_dir, f'{input_frame:0>5d}.bin')
-    filename_frame_2 = os.path.join(frames_dir, f'{input_frame+1:0>5d}.bin')
-
-    #TODO: แปลง grayscale เป็น RGB ด้วย cv2
+    #แปลง grayscale เป็น RGB ด้วย cv2
 
     image1 = cv2.cvtColor(np.fromfile(filename_frame_1, dtype=np.float32).reshape(279, 319), cv2.COLOR_GRAY2RGB)
     image2 = cv2.cvtColor(np.fromfile(filename_frame_2, dtype=np.float32).reshape(279, 319), cv2.COLOR_GRAY2RGB)
@@ -151,13 +159,19 @@ while input_frame < final_frame - 1:
     X1 = np.transpose(255.0 * X1.clip(0,1.0)[0, :, intPaddingTop:intPaddingTop+intHeight, intPaddingLeft: intPaddingLeft+intWidth], (1, 2, 0))
 
     interpolated_frame_number = 0
-    shutil.copy(filename_frame_1, os.path.join(output_dir, f"{input_frame:0>5d}{interpolated_frame_number:0>3d}.bin"))
+
+    shutil.copy(filename_frame_1, os.path.join(output_dir,
+                                               f"{input_frame:0>5d}_gsmap_nrt_japansub.{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H}{interpolated_frame_number:0>1d}0.bin"))
+
     for item, time_offset in zip(y_, time_offsets):
         interpolated_frame_number += 1
-        output_frame_file_path = os.path.join(output_dir, f"{input_frame:0>5d}{interpolated_frame_number:0>3d}.bin")
+
+        output_frame_file_path = os.path.join(output_dir,
+                                              f"{input_frame:0>5d}_gsmap_nrt_japansub.{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H}{interpolated_frame_number:0>1d}0.bin")
+
         # imsave(output_frame_file_path, np.round(item).astype(numpy.uint8))
         if item.shape[2] == 3:
-            item_1ch = np.copy(item.sum(axis=2)/3)
+            item_1ch = np.copy(item.sum(axis=2) / 3)
             item_1ch.astype('float32').tofile(output_frame_file_path)
         else:
             item.astype('float32').tofile(output_frame_file_path)
@@ -170,9 +184,11 @@ while input_frame < final_frame - 1:
     estimated_seconds_left = frames_left * loop_timer.avg
     estimated_time_left = datetime.timedelta(seconds=estimated_seconds_left)
     print(f"****** Processed frame {input_frame} | Time per frame (avg): {loop_timer.avg:2.2f}s | Time left: {estimated_time_left} ******************" )
+    dlist_iteration += 1
+    dlist_iteration_interpolate += 1
 
 # Copying last frame
-last_frame_filename = os.path.join(frames_dir, str(str(final_frame).zfill(5))+'.bin')
+last_frame_filename = os.path.join(frames_dir, str(str(final_frame).zfill(5)+f"{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H%M}"+'.bin'))
 shutil.copy(last_frame_filename, os.path.join(output_dir, f"{final_frame:0>5d}{0:0>3d}.bin"))
 
 print("Finished processing images.")
