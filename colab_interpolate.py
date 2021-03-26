@@ -188,7 +188,7 @@ while input_frame < final_frame - 1:
     dlist_iteration_interpolate += 1
 
 # Copying last frame
-last_frame_filename = os.path.join(frames_dir, str(str(final_frame).zfill(5)+f"{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H%M}"+'.bin'))
-shutil.copy(last_frame_filename, os.path.join(output_dir, f"{final_frame:0>5d}{0:0>3d}.bin"))
+last_frame_filename = os.path.join(frames_dir, str(str(final_frame).zfill(5)+'_gsmap_nrt_japansub.'+f"{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H%M}"+'.bin'))
+shutil.copy(last_frame_filename, os.path.join(output_dir, f"{final_frame:0>5d}_gsmap_nrt_japansub.{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H%M}.bin"))
 
 print("Finished processing images.")
