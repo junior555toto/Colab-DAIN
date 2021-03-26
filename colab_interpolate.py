@@ -61,7 +61,7 @@ final_frame = args.end_frame
 
 torch.set_grad_enabled(False)
 
-dlist = pd.date_range('2018-06-01 00:00', '2018-06-30 23:00', freq='1H')
+dlist = pd.date_range(args.start_date, args.end_date, freq='1H')
 dlist_iteration = 0
 dlist_iteration_interpolate = 0
 

@@ -72,6 +72,11 @@ parser.add_argument('--end_frame', type = int, default = 100, help='last frame n
 parser.add_argument('--frame_input_dir', type = str, default = '/content/DAIN/input_frames', help='frame input directory')
 parser.add_argument('--frame_output_dir', type = str, default = '/content/DAIN/output_frames', help='frame output directory')
 
+parser.add_argument('--start_date', type=str,
+                    help='start date for naming files based on pandas date range, input in YYYY-MM-DD HH:MM format')
+parser.add_argument('--end_date', type=str,
+                    help='end date for naming files based on pandas date range, input in YYYY-MM-DD HH:MM format')
+
 args = parser.parse_args()
 
 import shutil
