@@ -76,8 +76,8 @@ while input_frame < final_frame - 1:
     # Example of file name : 00685_gsmap_nrt_japansub.20180629.1200.bin
 
     start_time = time.time()
-    filename_frame_1 = os.path.join(frames_dir, f'{input_frame:0>5d}_gsmap_nrt_japansub.{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H%M}.bin')
-    filename_frame_2 = os.path.join(frames_dir, f'{input_frame+1:0>5d}_gsmap_nrt_japansub.{dlist[dlist_iteration+1]:%Y%m%d}.{dlist[dlist_iteration+1]:%H%M}.bin')
+    filename_frame_1 = os.path.join(frames_dir, f'{input_frame:0>5d}_gsmap_nrt.{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H%M}.bin')
+    filename_frame_2 = os.path.join(frames_dir, f'{input_frame+1:0>5d}_gsmap_nrt.{dlist[dlist_iteration+1]:%Y%m%d}.{dlist[dlist_iteration+1]:%H%M}.bin')
 
     #แปลง grayscale เป็น RGB ด้วย cv2
 
@@ -161,13 +161,13 @@ while input_frame < final_frame - 1:
     interpolated_frame_number = 0
 
     shutil.copy(filename_frame_1, os.path.join(output_dir,
-                                               f"{input_frame:0>5d}_gsmap_nrt_japansub.{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H}{interpolated_frame_number:0>1d}0.bin"))
+                                               f"{input_frame:0>5d}_gsmap_nrt.{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H}{interpolated_frame_number:0>1d}0.bin"))
 
     for item, time_offset in zip(y_, time_offsets):
         interpolated_frame_number += 1
 
         output_frame_file_path = os.path.join(output_dir,
-                                              f"{input_frame:0>5d}_gsmap_nrt_japansub.{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H}{interpolated_frame_number:0>1d}0.bin")
+                                              f"{input_frame:0>5d}_gsmap_nrt.{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H}{interpolated_frame_number:0>1d}0.bin")
 
         # imsave(output_frame_file_path, np.round(item).astype(numpy.uint8))
         if item.shape[2] == 3:
@@ -188,7 +188,7 @@ while input_frame < final_frame - 1:
     dlist_iteration_interpolate += 1
 
 # Copying last frame
-last_frame_filename = os.path.join(frames_dir, str(str(final_frame).zfill(5)+'_gsmap_nrt_japansub.'+f"{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H%M}"+'.bin'))
-shutil.copy(last_frame_filename, os.path.join(output_dir, f"{final_frame:0>5d}_gsmap_nrt_japansub.{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H%M}.bin"))
+last_frame_filename = os.path.join(frames_dir, str(str(final_frame).zfill(5)+'_gsmap_nrt.'+f"{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H%M}"+'.bin'))
+shutil.copy(last_frame_filename, os.path.join(output_dir, f"{final_frame:0>5d}_gsmap_nrt.{dlist[dlist_iteration]:%Y%m%d}.{dlist[dlist_iteration]:%H%M}.bin"))
 
 print("Finished processing images.")
